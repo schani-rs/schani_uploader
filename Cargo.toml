@@ -1,0 +1,6 @@
+[package]
+name = "schani_uploader"
+version = "0.1.0"
+authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
+
+[dependencies]
