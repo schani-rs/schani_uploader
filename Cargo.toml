@@ -4,3 +4,8 @@ version = "0.1.0"
 authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
 
 [dependencies]
+dotenv = "0.8.0"
+hyper = "0.10.6"
+hyper-openssl = "0.2.6"
+oauthcli = "1.0.4"
+url = "1.4.0"
