@@ -12,6 +12,7 @@ use std::io::Read;
 use std::fmt;
 use std::result::Result;
 use std::str::FromStr;
+use std::collections::HashMap;
 
 use self::oauthcli::*;
 use super::super::common::{Platform, Photo};
@@ -30,7 +31,9 @@ impl Client {
         }
     }
 
-    fn get_oauth_request_token(&self, client: &HyperClient) -> Result<String, String> {
+    fn get_oauth_request_token(&self,
+                               client: &HyperClient)
+                               -> Result<HashMap<String, String>, String> {
         let url = url::Url::parse("https://api.500px.com/v1/oauth/request_token").unwrap();
         let oauth_header = OAuthAuthorizationHeaderBuilder::new("POST",
                                                                 &url,
@@ -41,22 +44,37 @@ impl Client {
                 .to_string();
         let hdr = OAuthHeader::new(oauth_header);
 
-        let mut params = form_urlencoded::Serializer::new(String::new());
-        let body: String = params.finish();
-
         let mut resp = client
             .request(Method::Post, url)
             .header(hyper::header::Authorization(hdr))
-            .body(&body)
             .send()
             .unwrap();
 
         let mut body = vec![];
         resp.read_to_end(&mut body).unwrap();
         let resp_body = String::from_utf8_lossy(&body).into_owned();
-        println!("Resp: {}", resp_body);
-        print!("status: {}", resp.status);
-        Ok(resp_body)
+
+        let parsed = form_urlencoded::parse(resp_body.as_bytes());
+        let hash_query: HashMap<String, String> = parsed.into_owned().collect();
+        assert!(hash_query.contains_key("oauth_token_secret"));
+        assert!(hash_query.contains_key("oauth_token"));
+        Ok(hash_query)
+    }
+
+    fn authorize(&self, client: &HyperClient) -> Result<(), String> {
+        let request_token = self.get_oauth_request_token(client);
+
+        let url = url::Url::parse("https://api.500px.com/v1/oauth/authorize").unwrap();
+        let mut resp = client.request(Method::Post, url).send().unwrap();
+
+        let mut body = vec![];
+        resp.read_to_end(&mut body).unwrap();
+        let resp_body = String::from_utf8_lossy(&body).into_owned();
+
+        println!("Auth status: {}", resp.status);
+        println!("Auth resp: {}", resp_body);
+
+        Ok(())
     }
 }
 
@@ -66,8 +84,7 @@ impl Platform for Client {
         let connector = HttpsConnector::new(ssl);
         let client = HyperClient::with_connector(connector);
 
-        let req_token = self.get_oauth_request_token(&client)
-            .expect("could not get request token");
+        self.authorize(&client).expect("could not authorize");
     }
 }
 
