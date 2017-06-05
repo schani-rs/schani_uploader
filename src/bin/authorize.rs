@@ -12,7 +12,7 @@ pub fn main() {
     let x500px_key = env::var("X500PX_KEY").expect("X500PX_KEY must be set");
     let x500px_secret = env::var("X500PX_SECRET").expect("X500PX_SECRET must be set");
 
-    let platform = Client::new(x500px_key, x500px_secret);
+    let platform = Client::new(x500px_key, x500px_secret, None, None);
 
     platform.authorize();
 }

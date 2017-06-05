@@ -19,10 +19,10 @@ pub fn upload_image(consumer_key: &String,
                     oauth_token_secret: &String,
                     photo: &Photo)
                     -> Result<(), UploadError> {
-    let ssl = OpensslClient::new().unwrap();
+    let ssl = try!(OpensslClient::new());
     let connector = HttpsConnector::new(ssl);
 
-    let url = Url::parse("https://api.500px.com/v1/photos/upload").unwrap();
+    let url = try!(Url::parse("https://api.500px.com/v1/photos/upload"));
     let oauth_header = OAuthAuthorizationHeaderBuilder::new("POST",
                                                             &url,
                                                             consumer_key.to_string(),
@@ -33,17 +33,16 @@ pub fn upload_image(consumer_key: &String,
             .to_string();
     let hdr = OAuthHeader::new(oauth_header);
 
-    let mut request = Request::with_connector(Post, url, &connector)
-        .expect("Failed to create request");
+    let mut request = try!(Request::with_connector(Post, url, &connector));
     request.headers_mut().set(Authorization(hdr));
 
-    let mut multipart = Multipart::from_request(request).expect("multipart");
-    write_body(&mut multipart, photo).expect("Failed to write multipart body");
+    let mut multipart = try!(Multipart::from_request(request));
+    try!(write_body(&mut multipart, photo));
 
-    let mut resp = multipart.send().unwrap();
+    let mut resp = try!(multipart.send());
 
     let mut body = vec![];
-    resp.read_to_end(&mut body).unwrap();
+    try!(resp.read_to_end(&mut body));
     let resp_body = String::from_utf8_lossy(&body).into_owned();
 
     println!("Status: {}", resp.status);
@@ -52,11 +51,7 @@ pub fn upload_image(consumer_key: &String,
 }
 
 fn write_body(multipart: &mut Multipart<Request<Streaming>>, photo: &Photo) -> hyper::Result<()> {
-    multipart
-        .write_file("file", photo.get_path())
-        .expect("write file");
-    multipart
-        .write_text("name", "Schani test")
-        .expect("write name");
-    multipart.write_text("privacy", "1").and(Ok(()))
+    try!(multipart.write_file("file", photo.get_path()));
+    try!(multipart.write_text("name", "Schani test"));
+    multipart.write_text("privacy", "1").map(|_| ())
 }

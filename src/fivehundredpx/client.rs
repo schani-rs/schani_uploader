@@ -2,6 +2,7 @@ use hyper::Client as HyperClient;
 use hyper::net::HttpsConnector;
 use hyper_openssl::OpensslClient;
 use std::io;
+use std::option::Option;
 use super::oauth::*;
 use super::upload::upload_image;
 use super::super::error::UploadError;
@@ -13,17 +14,26 @@ pub struct Client {
     client: HyperClient,
     consumer_key: String,
     consumer_secret: String,
+    token: Option<String>,
+    token_secret: Option<String>,
 }
 
 impl Client {
-    pub fn new(key: String, secret: String) -> Client {
+    pub fn new(key: String,
+               secret: String,
+               token: Option<String>,
+               token_secret: Option<String>)
+               -> Client {
         let ssl = OpensslClient::new().unwrap();
         let connector = HttpsConnector::new(ssl);
         let client = HyperClient::with_connector(connector);
+
         Client {
             client: client,
             consumer_key: key,
             consumer_secret: secret,
+            token: token,
+            token_secret: token_secret,
         }
     }
 }
@@ -51,12 +61,15 @@ impl Platform for Client {
     }
 
     fn upload(&self, photo: &Photo) -> Result<(), UploadError> {
-        let oauth_token = "xxx".to_string();
-        let oauth_token_secret = "yyy".to_string();
+        let token = try!(self.token.as_ref().ok_or("token required for upload"));
+        let token_secret = try!(self.token_secret
+                                    .as_ref()
+                                    .ok_or("token_secret required for upload"));
+
         upload_image(&self.consumer_key,
                      &self.consumer_secret,
-                     &oauth_token,
-                     &oauth_token_secret,
+                     &token,
+                     &token_secret,
                      &photo)
     }
 }
