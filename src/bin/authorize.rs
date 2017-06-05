@@ -14,5 +14,5 @@ pub fn main() {
 
     let platform = Client::new(x500px_key, x500px_secret);
 
-    platform.autorize();
+    platform.authorize();
 }
