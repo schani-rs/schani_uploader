@@ -6,12 +6,11 @@ use std::borrow::Cow;
 use url::Url;
 use url::form_urlencoded;
 use std::collections::HashMap;
-use std::io;
 use std::io::Read;
 use super::oauth_header::OAuthHeader;
 
 #[derive(Debug)]
-struct OAuthRequestToken<'a> {
+pub struct OAuthRequestToken<'a> {
     value: Cow<'a, str>,
     secret: Cow<'a, str>,
 }
@@ -52,43 +51,36 @@ fn get_oauth_request_token<'a>(client: &Client,
        })
 }
 
-fn authorize<'a>(client: &Client,
-                 consumer_key: &'a String,
-                 consumer_secret: &'a String)
-                 -> Result<(OAuthRequestToken<'a>, String), String> {
+pub fn authorize<'a>(client: &Client,
+                     consumer_key: &'a String,
+                     consumer_secret: &'a String)
+                     -> Result<(OAuthRequestToken<'a>, String), String> {
     let request_token = get_oauth_request_token(client, consumer_key, consumer_secret)?;
 
     let mut authorize_url = Url::parse("https://api.500px.com/v1/oauth/authorize").unwrap();
     authorize_url
         .query_pairs_mut()
         .append_pair("oauth_token", &request_token.value);
-    println!("Please visit {} and grant access to your account.",
-             authorize_url);
 
-    let mut verifier = String::new();
-
-    io::stdin()
-        .read_line(&mut verifier)
-        .expect("Failed to read line");
-
-    Ok((request_token, verifier))
+    Ok((request_token, authorize_url.to_string()))
 }
 
 pub fn get_oauth_access_token<'a>(client: &Client,
                                   consumer_key: &'a String,
-                                  consumer_secret: &'a String)
+                                  consumer_secret: &'a String,
+                                  request_token: &OAuthRequestToken,
+                                  verifier: &'a String)
                                   -> Result<(), String> {
-    let (request_token, verifier) = authorize(client, consumer_key, consumer_secret)?;
 
     println!("Got verifier {}", verifier);
-
     let url = Url::parse("https://api.500px.com/v1/oauth/access_token").unwrap();
     let oauth_header = OAuthAuthorizationHeaderBuilder::new("POST",
                                                             &url,
                                                             consumer_key.to_string(),
                                                             consumer_secret.to_string(),
                                                             SignatureMethod::HmacSha1)
-            .token(request_token.value, request_token.secret)
+            .token(request_token.value.to_owned(),
+                   request_token.secret.to_owned())
             .verifier(verifier.trim())
             .finish()
             .to_string();

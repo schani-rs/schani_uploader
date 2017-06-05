@@ -1,11 +1,18 @@
-
-use std::path::Path;
-
 #[derive(Debug)]
-pub struct Photo {}
+pub struct Photo {
+    path: String,
+    title: String,
+}
 
 impl Photo {
-    pub fn load<P: AsRef<Path>>(_: P) -> Result<Photo, &'static str> {
-        Ok(Photo {})
+    pub fn new(path: &String, title: &String) -> Photo {
+        Photo {
+            path: path.to_string(),
+            title: title.to_string(),
+        }
+    }
+
+    pub fn get_path(&self) -> String {
+        self.path.to_string()
     }
 }
