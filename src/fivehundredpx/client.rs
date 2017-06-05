@@ -2,6 +2,8 @@ use hyper::Client as HyperClient;
 use hyper::net::HttpsConnector;
 use hyper_openssl::OpensslClient;
 use super::oauth::*;
+use super::upload::upload_image;
+use super::super::error::UploadError;
 
 use super::super::common::{Platform, Photo};
 
@@ -21,12 +23,21 @@ impl Client {
 }
 
 impl Platform for Client {
-    fn upload(&self, _: &Photo) {
+    fn authorize(&self) {
         let ssl = OpensslClient::new().unwrap();
         let connector = HttpsConnector::new(ssl);
         let client = HyperClient::with_connector(connector);
-
         get_oauth_access_token(&client, &self.consumer_key, &self.consumer_secret)
-            .expect("could not get an OAuth access token");
+            .expect("could not get an OAuth access token")
+    }
+
+    fn upload(&self, photo: &Photo) -> Result<(), UploadError>  {
+        let oauth_token = "xxx".to_string();
+        let oauth_token_secret = "yyy".to_string();
+        upload_image(&self.consumer_key,
+                     &self.consumer_secret,
+                     &oauth_token,
+                     &oauth_token_secret,
+                     &photo)
     }
 }

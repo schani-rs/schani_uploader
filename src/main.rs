@@ -13,7 +13,7 @@ pub fn main() {
     let x500px_secret = env::var("X500PX_SECRET").expect("X500PX_SECRET must be set");
 
     let platform = Client::new(x500px_key, x500px_secret);
-    let photo = Photo::load("data/cat.jpg").expect("could not load photo");
+    let photo = Photo::new(&"resources/img1.jpg".to_string(), &"test".to_string());
 
-    platform.upload(&photo);
+    platform.upload(&photo).expect("could not upload photo");
 }

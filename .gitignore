@@ -8,3 +8,5 @@
 
 # Don't include possibly sensitive information
 .env
+
+/resources
