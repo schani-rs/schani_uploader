@@ -1,0 +1,7 @@
+from debian:latest
+
+VOLUME ["/schani_uploader"]
+
+EXPOSE 8000
+
+ENTRYPOINT ["/schani_uploader/webservice"]
