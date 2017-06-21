@@ -14,8 +14,8 @@ use schani_uploader::common::Platform;
 use schani_uploader::fivehundredpx::Client;
 use schani_uploader::store;
 
-#[post("/platform/500px/upload/<image_id>")]
-fn upload_to_500px(image_id: i32) -> Result<(), Custom<&'static str>> {
+#[post("/platform/500px/upload/<user_id>/<image_id>")]
+fn upload_to_500px(user_id: i32, image_id: i32) -> Result<(), Custom<&'static str>> {
     let x500px_key = env::var("X500PX_KEY").expect("X500PX_KEY must be set");
     let x500px_secret = env::var("X500PX_SECRET").expect("X500PX_SECRET must be set");
 
@@ -44,7 +44,7 @@ fn upload_to_500px(image_id: i32) -> Result<(), Custom<&'static str>> {
         )
     }));
 
-    if let Err(err) = platform.upload(&mut image_stream) {
+    if let Err(err) = platform.upload(user_id, &mut image_stream) {
         println!("could not upload photo: {}", err);
     }
 
