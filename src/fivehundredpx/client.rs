@@ -5,6 +5,7 @@ use std::io;
 use std::option::Option;
 use super::oauth::*;
 use super::upload::upload_image;
+use super::super::preferences::{PreferenceStore, PreferencesStoreBuilder};
 use super::super::error::UploadError;
 
 use super::super::common::Platform;
@@ -64,10 +65,12 @@ impl Platform for Client {
         ).expect("could not get access token");
     }
 
-    fn upload(&self, mut image_stream: &mut io::Read) -> Result<(), UploadError> {
-        let token = try!(self.token.as_ref().ok_or("token required for upload"));
-        let token_secret = try!(self.token_secret.as_ref().ok_or(
-            "token_secret required for upload",
+    fn upload(&self, user_id: i32, mut image_stream: &mut io::Read) -> Result<(), UploadError> {
+        let store = PreferencesStoreBuilder::build();
+        let token = try!(store.get_preference(user_id, "500px_token".to_string()));
+        let token_secret = try!(store.get_preference(
+            user_id,
+            "500px_token_secret".to_string(),
         ));
 
         upload_image(

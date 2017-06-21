@@ -1,10 +1,11 @@
 use hyper::error::Error as HyperError;
 use openssl::error::ErrorStack;
 use std::convert::From;
-use std::error;
+use std::error::{self, Error};
 use std::fmt;
 use std::io;
 use url::ParseError;
+use super::preferences::PreferencesError;
 
 #[derive(Debug)]
 pub enum UploadError {
@@ -52,6 +53,12 @@ impl error::Error for UploadError {
 impl From<&'static str> for UploadError {
     fn from(orig: &str) -> Self {
         UploadError::Generic(orig.to_owned())
+    }
+}
+
+impl From<PreferencesError> for UploadError {
+    fn from(orig: PreferencesError) -> Self {
+        UploadError::Generic(orig.description().to_owned())
     }
 }
 

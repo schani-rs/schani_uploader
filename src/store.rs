@@ -11,7 +11,7 @@ pub fn load_image_file(
         "http://store:8000/api/images/{}/file",
         image_id.to_string()
     )));
-    let mut resp: Response = try!(client.get(url).send());
+    let resp: Response = try!(client.get(url).send());
 
     Ok(Box::new(resp))
 }

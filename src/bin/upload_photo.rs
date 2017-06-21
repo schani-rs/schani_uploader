@@ -26,7 +26,7 @@ pub fn main() {
     );
     let mut image_stream = store::load_image_file(123).expect("could not load file from store");
 
-    if let Err(err) = platform.upload(&mut image_stream) {
+    if let Err(err) = platform.upload(1, &mut image_stream) {
         println!("could not upload photo: {}", err);
     }
 }
